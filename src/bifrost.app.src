@@ -1,16 +1,16 @@
 {application, bifrost,
- [{description, "An OTP application"},
-  {vsn, "0.1.0"},
+ [{description, "API Manager & WebSocket Server for ArkNode.io"},
+  {vsn, "0.1"},
   {registered, []},
   {mod, { bifrost_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    cowboy,
+    jiffy
    ]},
   {env,[]},
   {modules, []},
-
   {maintainers, []},
-  {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.
