@@ -14,6 +14,7 @@
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
+-define(CHILD(ID), #{id => ID, start => {ID, start_link, []}}).
 
 %%====================================================================
 %% API functions
@@ -28,7 +29,11 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+  SupervisorFlags = #{strategy => one_for_one,
+                      intensity => 25,
+                      period => 60},
+  ChildSpecs = [?CHILD(bifrost_web)],
+  {ok, {SupervisorFlags, ChildSpecs}}.
 
 %%====================================================================
 %% Internal functions

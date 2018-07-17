@@ -1,5 +1,5 @@
 {application, bifrost,
- [{description, "API Manager & WebSocket Server for ArkNode.io"},
+ [{description, "API Manager & WebSocket Server for ArkNode.IO"},
   {vsn, "0.1"},
   {registered, []},
   {mod, { bifrost_app, []}},
@@ -7,7 +7,8 @@
    [kernel,
     stdlib,
     cowboy,
-    jiffy
+    jiffy,
+    lager
    ]},
   {env,[]},
   {modules, []},
