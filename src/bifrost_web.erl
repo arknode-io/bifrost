@@ -51,13 +51,13 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-  IndexFileSpec = case application:get_env(web_file_path) of
+  IndexFileSpec = case application:get_env(index_file_path) of
                     undefined ->
                       {priv_file, bifrost, "index.html"};
                     {ok, IndexFilePath} ->
                       {file, IndexFilePath}
                   end,
-  StaticDirSpec = case application:get_env(web_dir_path) of
+  StaticDirSpec = case application:get_env(static_dir_path) of
                     undefined ->
                       {priv_dir, bifrost, ""};
                     {ok, StaticDirPath} ->
@@ -71,7 +71,7 @@ init([]) ->
                                            {"/[...]", cowboy_static, StaticDirSpec}
                                           ]}
                                    ]),
-  PortSpec = case application:get_env(web_port) of
+  PortSpec = case application:get_env(port) of
                undefined -> [];
                {ok, Port} -> [{port, Port}]
              end,
