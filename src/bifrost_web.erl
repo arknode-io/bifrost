@@ -61,7 +61,7 @@ init([]) ->
                     undefined ->
                       {priv_dir, bifrost, ""};
                     {ok, StaticDirPath} ->
-                      {file, StaticDirPath}
+                      {dir, StaticDirPath}
                   end,
   Dispatch = cowboy_router:compile([
                                     {'_', [
