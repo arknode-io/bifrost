@@ -14,7 +14,7 @@
   0},
  {<<"lager">>,
   {git,"https://github.com/erlang-lager/lager.git",
-       {ref,"bf60290101306b3cc26544d0d181a5cff8931e82"}},
+       {ref,"37b7facc410daabf3ebd50bac8da7e0e0f3cc0e2"}},
   0},
  {<<"ranch">>,
   {git,"https://github.com/ninenines/ranch",

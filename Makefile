@@ -14,3 +14,5 @@ test:
 	@$(rebar) do ct
 shell:
 	@$(rebar) shell
+upgrade:
+	@$(rebar) upgrade
