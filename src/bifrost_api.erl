@@ -3,7 +3,8 @@
          allowed_methods/2,
          content_types_provided/2,
          content_types_accepted/2,
-         handle_request/2]).
+         handle_request/2,
+         delete_resource/2]).
 
 init(Req, State) ->
   {cowboy_rest, Req, State}.
@@ -57,6 +58,9 @@ handle_request(Req, APIDispatchRules) ->
   lager:info("ReqReply is ~p", [ReqReply]),
   {Result, Req1, APIDispatchRules}.
 
+delete_resource(Req, State) ->
+  handle_request(Req, State),
+  {true, Req, State}.
 
 read_body(Req0) ->
   case read_body(Req0, <<>>) of
