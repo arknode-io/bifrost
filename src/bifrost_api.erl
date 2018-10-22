@@ -44,9 +44,14 @@ handle_request(Req, APIDispatchRules) ->
   Function = get_api_function(hd(PathInfo), Method, APIDispatchRules),
   Reply = call(Function, APIReq),
   lager:info("Reply is ~p", [Reply]),
+  Result = case Method of
+             <<"GET">> -> Reply;
+             <<"PUT">> -> true;
+             <<"DELETE">> -> true
+           end,
   ReqReply = cowboy_req:set_resp_body(Reply, Req1),
   lager:info("ReqReply is ~p", [ReqReply]),
-  {ReqReply, APIDispatchRules}.
+  {Result, Req1, APIDispatchRules}.
 
 
 read_body(Req0) ->
