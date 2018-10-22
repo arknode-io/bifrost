@@ -43,7 +43,9 @@ handle_request(Req, APIDispatchRules) ->
   lager:info("All details ~p~n", [APIReq]),
   Function = get_api_function(hd(PathInfo), Method, APIDispatchRules),
   Reply = call(Function, APIReq),
+  lager:info("Reply is ~p", [Reply]),
   ReqReply = cowboy_req:set_resp_body(Reply, Req1),
+  lager:info("ReqReply is ~p", [ReqReply]),
   {true, ReqReply, APIDispatchRules}.
 
 
