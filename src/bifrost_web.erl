@@ -63,10 +63,13 @@ init([]) ->
                     {ok, StaticDirPath} ->
                       {dir, StaticDirPath}
                   end,
+  APIDispatchSpecs = application:get_env(bifrost, api_dispatch_rules, #{}),
+  APIDispatchRules = convert_keys_to_binary(APIDispatchSpecs),
   Dispatch = cowboy_router:compile([
                                     {'_', [
                                            {"/", cowboy_static, IndexFileSpec},
-                                           {"/api", bifrost_api, []},
+                                           {"/api", bifrost_api, #{}},
+                                           {"/api/[...]", bifrost_api, APIDispatchRules},
                                            {"/sock", bifrost_sock, []},
                                            {"/[...]", cowboy_static, StaticDirSpec}
                                           ]}
@@ -154,6 +157,22 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-
-
-
+convert_keys_to_binary(Map) ->
+  maps:from_list(
+    lists:map(
+      fun({Key, Value}) ->
+          KeyBin = if
+                     is_atom(Key) -> atom_to_binary(Key, latin1);
+                     is_list(Key) -> list_to_binary(Key);
+                     is_integer(Key) -> integer_to_binary(Key);
+                     true -> Key
+                   end,
+          ValueU = if
+                     is_map(Value) -> convert_keys_to_binary(Value);
+                     true -> Value
+                   end,
+          {KeyBin, ValueU}
+      end,
+      maps:to_list(Map)
+     )
+   ).
