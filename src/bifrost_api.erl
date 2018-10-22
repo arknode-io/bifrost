@@ -48,9 +48,14 @@ handle_request(Req, APIDispatchRules) ->
 
 
 read_body(Req0) ->
-  {ok, Data, Req} = read_body(Req0, <<>>),
-  Body = jiffy:decode(Data, [return_maps]),
-  {ok, Body, Req}.
+  case read_body(Req0, <<>>) of
+    {ok, <<>>, Req} ->
+      {ok, #{}, Req};
+    {ok, Data, Req} ->
+      lager:info("Data is ~p", [Data]),
+      Body = jiffy:decode(Data, [return_maps]),
+      {ok, Body, Req}
+  end.
 
 read_body(Req0, Acc) ->
   case cowboy_req:read_body(Req0) of
