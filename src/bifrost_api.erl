@@ -46,7 +46,7 @@ handle_request(Req, APIDispatchRules) ->
   lager:info("Reply is ~p", [Reply]),
   ReqReply = cowboy_req:set_resp_body(Reply, Req1),
   lager:info("ReqReply is ~p", [ReqReply]),
-  {true, ReqReply, APIDispatchRules}.
+  {ReqReply, APIDispatchRules}.
 
 
 read_body(Req0) ->
