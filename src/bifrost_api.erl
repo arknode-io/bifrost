@@ -43,7 +43,8 @@ handle_request(Req, APIDispatchRules) ->
               query_string => QueryString, body => Body },
   lager:info("All details ~p~n", [APIReq]),
   Function = get_api_function(hd(PathInfo), Method, APIDispatchRules),
-  Reply = call(Function, APIReq),
+  ReplyTerm = call(Function, APIReq),
+  Reply = jiffy:encode(ReplyTerm),
   lager:info("Reply is ~p", [Reply]),
   Result = case Method of
              <<"GET">> -> Reply;
