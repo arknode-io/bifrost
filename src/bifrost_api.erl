@@ -39,7 +39,7 @@ handle_request(Req, APIDispatchRules) ->
   PathInfo = cowboy_req:path_info(Req),
   QueryString = cowboy_req:parse_qs(Req),
   {ok, Body, Req1} = read_body(Req),
-  APIReq = #{ method => Method, headers => Headers, path_info => PathInfo,
+  APIReq = #{ method => Method, headers => Headers, path_info => tl(PathInfo),
               query_string => QueryString, body => Body },
   lager:info("All details ~p~n", [APIReq]),
   Function = get_api_function(hd(PathInfo), Method, APIDispatchRules),
