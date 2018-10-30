@@ -35,13 +35,9 @@ content_types_accepted(Req, State) ->
 handle_request(Req, APIDispatchRules) ->
   lager:info("Got to handle_request ~p @ ~p", [Req, APIDispatchRules]),
   Method = cowboy_req:method(Req),
-  lager:info("Method is ~p", [Method]),
   Headers = cowboy_req:headers(Req),
-  lager:info("Headers is ~p", [Headers]),
   PathInfo = cowboy_req:path_info(Req),
-  lager:info("PathInfo is ~p", [PathInfo]),
   QueryString = cowboy_req:parse_qs(Req),
-  lager:info("QueryString is ~p", [QueryString]),
   {ok, Body, Req1} = read_body(Req),
   APIReq = #{ method => Method, headers => Headers, path_info => PathInfo,
               query_string => QueryString, body => Body },
@@ -56,7 +52,7 @@ handle_request(Req, APIDispatchRules) ->
            end,
   ReqReply = cowboy_req:set_resp_body(Reply, Req1),
   lager:info("ReqReply is ~p", [ReqReply]),
-  {Result, Req1, APIDispatchRules}.
+  {Result, ReqReply, APIDispatchRules}.
 
 delete_resource(Req, State) ->
   handle_request(Req, State),
