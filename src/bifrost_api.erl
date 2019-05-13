@@ -49,7 +49,8 @@ handle_request(Req, APIDispatchRules) ->
   Result = case Method of
              <<"GET">> -> Reply;
              <<"PUT">> -> true;
-             <<"DELETE">> -> true
+             <<"DELETE">> -> true;
+             <<"POST">> -> true
            end,
   ReqReply = cowboy_req:set_resp_body(Reply, Req1),
   lager:info("ReqReply is ~p", [ReqReply]),
