@@ -11,15 +11,17 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/0
+        ,add_route/3
+        ,remove_route/1]).
 
 %% gen_server callbacks
--export([init/1,
-         handle_call/3,
-         handle_cast/2,
-         handle_info/2,
-         terminate/2,
-         code_change/3]).
+-export([init/1
+        ,handle_call/3
+        ,handle_cast/2
+        ,handle_info/2
+        ,terminate/2
+        ,code_change/3]).
 
 %%%===================================================================
 %%% API
@@ -34,6 +36,12 @@
 %%--------------------------------------------------------------------
 start_link() ->
   gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+add_route(Path, Module, Init) ->
+  gen_server:cast(?MODULE, {add_route, Path, Module, Init}).
+
+remove_route(Path) ->
+  gen_server:cast(?MODULE, {remove_route, Path}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -51,38 +59,17 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-  IndexFileSpec = case application:get_env(index_file_path) of
-                    undefined ->
-                      {priv_file, bifrost, "index.html"};
-                    {ok, IndexFilePath} ->
-                      {file, IndexFilePath}
-                  end,
-  StaticDirSpec = case application:get_env(static_dir_path) of
-                    undefined ->
-                      {priv_dir, bifrost, ""};
-                    {ok, StaticDirPath} ->
-                      {dir, StaticDirPath}
-                  end,
-  APIDispatchSpecs = application:get_env(bifrost, api_dispatch_rules, #{}),
-  APIDispatchRules = convert_keys_to_binary(APIDispatchSpecs),
-  Dispatch = cowboy_router:compile([
-                                    {'_', [
-                                           {"/", cowboy_static, IndexFileSpec},
-                                           {"/api", bifrost_api, #{}},
-                                           {"/api/[...]", bifrost_api, APIDispatchRules},
-                                           {"/sock", bifrost_sock, []},
-                                           {"/[...]", cowboy_static, StaticDirSpec}
-                                          ]}
-                                   ]),
+  Routes = get_routes(),
+  apply_dispatch(Routes),
   PortSpec = case application:get_env(port) of
                undefined -> [];
                {ok, Port} -> [{port, Port}]
              end,
   {ok, _} = cowboy:start_clear(bifrost, PortSpec,
-                               #{env => #{dispatch => Dispatch}}),
+                               #{env => #{dispatch => {persistent_term, bifrost_dispatch}}}),
   PortFromRanch = ranch:get_port(bifrost),
   lager:info("Bifrost opened on port : ~p", [{PortFromRanch}]),
-  {ok, #{}}.
+  {ok, []}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -112,6 +99,16 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_cast({add_route, Path, Module, Init}, DynamicRoutes) ->
+  DynamicRoutesUpdate = lists:keystore(Path, 1, DynamicRoutes, {Path, Module, Init}),
+  Routes = get_routes(DynamicRoutesUpdate),
+  apply_dispatch(Routes),
+  {noreply, DynamicRoutesUpdate};
+handle_cast({remove_route, Path}, DynamicRoutes) ->
+  DynamicRoutesUpdate = lists:keydelete(Path, 1, DynamicRoutes),
+  Routes = get_routes(DynamicRoutesUpdate),
+  apply_dispatch(Routes),
+  {noreply, DynamicRoutesUpdate};
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
@@ -157,22 +154,30 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-convert_keys_to_binary(Map) ->
-  maps:from_list(
-    lists:map(
-      fun({Key, Value}) ->
-          KeyBin = if
-                     is_atom(Key) -> atom_to_binary(Key, latin1);
-                     is_list(Key) -> list_to_binary(Key);
-                     is_integer(Key) -> integer_to_binary(Key);
-                     true -> Key
-                   end,
-          ValueU = if
-                     is_map(Value) -> convert_keys_to_binary(Value);
-                     true -> Value
-                   end,
-          {KeyBin, ValueU}
-      end,
-      maps:to_list(Map)
-     )
-   ).
+get_routes() ->
+  get_routes([]).
+
+get_routes(DynamicRoutes) ->
+  IndexFileSpec = case application:get_env(index_file_path) of
+                    undefined ->
+                      {priv_file, bifrost, "index.html"};
+                    {ok, IndexFilePath} ->
+                      {file, IndexFilePath}
+                  end,
+  StaticDirSpec = case application:get_env(static_dir_path) of
+                    undefined ->
+                      {priv_dir, bifrost, ""};
+                    {ok, StaticDirPath} ->
+                      {dir, StaticDirPath}
+                  end,
+  DynamicRoutesAligned = lists:reverse(
+                              lists:keysort(1, DynamicRoutes)
+                             ),
+  [{"/", cowboy_static, IndexFileSpec},
+   {"/sock", bifrost_sock, []} ]
+  ++ DynamicRoutesAligned
+  ++ [{"/[...]", cowboy_static, StaticDirSpec}].
+
+apply_dispatch(Routes) ->
+  Dispatch = cowboy_router:compile([{'_', Routes }]),
+  persistent_term:put(bifrost_dispatch, Dispatch).
